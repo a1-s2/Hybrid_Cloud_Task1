@@ -210,6 +210,7 @@ resource "aws_cloudfront_distribution" "tera-cloufront1" {
     }
 }
 
+/*
 
 resource "null_resource" "nullremote" {
   depends_on = [
@@ -223,3 +224,4 @@ resource "null_resource" "nullremote" {
 }
 
 
+*/
