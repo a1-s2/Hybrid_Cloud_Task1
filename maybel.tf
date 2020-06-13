@@ -218,7 +218,7 @@ resource "null_resource" "nullremote" {
 
  
   provisioner "local-exec" {
-    command = "chrome ${aws_instance.os1.public_ip}"
+    command = "firefox ${aws_instance.os1.public_ip}"
   }
 }
 
