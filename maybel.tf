@@ -39,33 +39,33 @@ resource "aws_security_group" "sec_grp" {
 
 
 
-resource "tls_private_key" "myterrakey" {
+resource "tls_private_key" "mykey" {
   algorithm = "RSA"
 }
 
 resource "aws_key_pair" "generated_key" {
-  key_name   = "myterrakey"
-  public_key = "${tls_private_key.myterrakey.public_key_openssh}"
+  key_name   = "mykey"
+  public_key = "${tls_private_key.mykey.public_key_openssh}"
 
 
   depends_on = [
-    tls_private_key.myterrakey
+    tls_private_key.mykey
   ]
 }
 
 resource "local_file" "key-file" {
-  content  = "${tls_private_key.myterrakey.private_key_pem}"
-  filename = "myterrakey.pem"
+  content  = "${tls_private_key.mykey.private_key_pem}"
+  filename = "mykey.pem"
 
 
   depends_on = [
-    tls_private_key.myterrakey
+    tls_private_key.mykey
   ]
 }
 
 
 
-resource "aws_instance" "os1" {
+resource "aws_instance" "AbhiOs1" {
   ami           = "ami-0447a12f28fddb066"  
   instance_type = "t2.micro"
   key_name = aws_key_pair.generated_key.key_name
@@ -76,8 +76,8 @@ resource "aws_instance" "os1" {
     agent    = "false"
     type     = "ssh"
     user     = "ec2-user"
-    private_key = "${tls_private_key.myterrakey.private_key_pem}"
-    host     = "${aws_instance.os1.public_ip}"
+    private_key = "${tls_private_key.mykey.private_key_pem}"
+    host     = "${aws_instance.AbhiOs1.public_ip}"
   }
     inline = [
       "sudo yum install httpd  php git -y",
@@ -87,25 +87,25 @@ resource "aws_instance" "os1" {
   }
 
   tags = {
-    Name = "os1"
+    Name = "AbhiOs1"
   }
 }
 
-resource "aws_ebs_volume" "ebs1" {
-  availability_zone = aws_instance.os1.availability_zone
+resource "aws_ebs_volume" "myebs1" {
+  availability_zone = aws_instance.AbhiOs1.availability_zone
   size              = 1
 
   tags = {
-    Name = "vol1"
+    Name = "ebsvol"
   }
 }
 
 
 
-resource "aws_volume_attachment" "ebs_attach" {
+resource "aws_volume_attachment" "attach_ebs" {
   device_name = "/dev/sdh"
-  volume_id   = aws_ebs_volume.ebs1.id
-  instance_id = aws_instance.os1.id
+  volume_id   = aws_ebs_volume.myebs1.id
+  instance_id = aws_instance.AbhiOs1.id
   force_detach = true
 }
 
@@ -113,27 +113,27 @@ resource "aws_volume_attachment" "ebs_attach" {
 
 
 output "myip" {
-  value = aws_instance.os1.public_ip
+  value = aws_instance.AbhiOs1.public_ip
 }
 
 resource "null_resource" "nullip" {
   provisioner "local-exec" {
-    command = "echo ${aws_instance.os1.public_ip} > publicip.txt"
+    command = "echo ${aws_instance.AbhiOs1.public_ip} > publicip.txt"
   }
 }
 
 
 resource "null_resource" "nullmount" {
   depends_on = [
-    aws_volume_attachment.ebs_attach,
+    aws_volume_attachment.attach_ebs,
   ]
 
   connection {
     agent    = "false"
     type     = "ssh"
     user     = "ec2-user"
-    private_key = "${tls_private_key.myterrakey.private_key_pem}"
-    host     = "${aws_instance.os1.public_ip}"
+    private_key = "${tls_private_key.mykey.private_key_pem}"
+    host     = "${aws_instance.AbhiOs1.public_ip}"
   }
   provisioner "remote-exec" {
     inline = [
@@ -147,7 +147,7 @@ resource "null_resource" "nullmount" {
 
 
 resource "aws_s3_bucket" "terra-buckcbuck" {
-  bucket = "abhibucket028"
+  bucket = "abhibucketnew"
   acl    = "public-read"
 
   versioning {
@@ -155,7 +155,7 @@ resource "aws_s3_bucket" "terra-buckcbuck" {
   }
  
   tags = {
-    Name = "my-tera-buck"
+    Name = "my-new-buck"
     Environment = "Dev"
   }
 }
@@ -164,8 +164,8 @@ resource "aws_s3_bucket" "terra-buckcbuck" {
 
 resource "aws_cloudfront_distribution" "tera-cloufront1" {
     origin {
-        domain_name = "abhibucket028.s3.amazonaws.com"
-        origin_id = "S3-abhibucket028"
+        domain_name = "abhibucketnew.s3.amazonaws.com"
+        origin_id = "S3-abhibucketnew"
 
 
         custom_origin_config {
@@ -182,7 +182,7 @@ resource "aws_cloudfront_distribution" "tera-cloufront1" {
     default_cache_behavior {
         allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
         cached_methods = ["GET", "HEAD"]
-        target_origin_id = "S3-abhibucket028"
+        target_origin_id = "S3-abhibucketnew"
 
         forwarded_values {
             query_string = false
