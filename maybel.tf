@@ -211,17 +211,13 @@ resource "aws_cloudfront_distribution" "tera-cloufront1" {
 }
 
 /*
-
 resource "null_resource" "nullremote" {
   depends_on = [
     null_resource.nullmount,
   ]
-
  
   provisioner "local-exec" {
     command = "firefox ${aws_instance.os1.public_ip}"
   }
 }
-
-
 */
